@@ -1,5 +1,6 @@
 package com.kost.view;
 
+import com.kost.view.KamarPanel;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -191,17 +192,16 @@ public class MainFrame extends JFrame {
 
     // ── CONTENT AREA ─────────────────────────────────────────
     private JPanel buildContent() {
-        cardLayout = new CardLayout();
-        contentPanel = new JPanel(cardLayout);
-        contentPanel.setBackground(new Color(248, 250, 252));
+    cardLayout = new CardLayout();
+    contentPanel = new JPanel(cardLayout);
+    contentPanel.setBackground(new Color(248, 250, 252));
 
-        // Placeholder panel untuk setiap halaman
-        contentPanel.add(buildPlaceholder("[ # ]", "Dashboard", "Selamat datang di KostManager!"), "dashboard");
-        contentPanel.add(buildPlaceholder("[ K ]", "Manajemen Kamar", "Kelola data kamar kost di sini."), "kamar");
-        contentPanel.add(buildPlaceholder("[ P ]", "Data Penghuni", "Kelola data penghuni kost di sini."), "penghuni");
-        contentPanel.add(buildPlaceholder("[ $ ]", "Pembayaran", "Kelola tagihan dan pembayaran di sini."), "pembayaran");
+    contentPanel.add(buildPlaceholder("[ # ]", "Dashboard", "Selamat datang di KostManager!"), "dashboard");
+    contentPanel.add(new KamarPanel(), "kamar");
+    // contentPanel.add(new PenghuniPanel(), "penghuni");
+    // contentPanel.add(new PembayaranPanel(), "pembayaran");
 
-        return contentPanel;
+    return contentPanel;
     }
 
     private JPanel buildPlaceholder(String emoji, String title, String subtitle) {

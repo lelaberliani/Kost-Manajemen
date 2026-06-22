@@ -1,6 +1,7 @@
 package com.kost;
 
 import com.formdev.flatlaf.FlatIntelliJLaf;
+import com.kost.view.MainFrame;
 import javax.swing.SwingUtilities;
 
 public class App {

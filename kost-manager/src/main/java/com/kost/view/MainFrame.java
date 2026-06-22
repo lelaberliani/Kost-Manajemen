@@ -1,6 +1,9 @@
 package com.kost.view;
 
 import com.kost.view.KamarPanel;
+import com.kost.view.PenghuniPanel;
+import com.kost.view.PembayaranPanel;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -191,15 +194,16 @@ public class MainFrame extends JFrame {
     }
 
     // ── CONTENT AREA ─────────────────────────────────────────
-    private JPanel buildContent() {
+   private JPanel buildContent() {
     cardLayout = new CardLayout();
     contentPanel = new JPanel(cardLayout);
     contentPanel.setBackground(new Color(248, 250, 252));
 
+    // Ganti placeholder dengan panel asli
     contentPanel.add(buildPlaceholder("[ # ]", "Dashboard", "Selamat datang di KostManager!"), "dashboard");
     contentPanel.add(new KamarPanel(), "kamar");
-    // contentPanel.add(new PenghuniPanel(), "penghuni");
-    // contentPanel.add(new PembayaranPanel(), "pembayaran");
+    contentPanel.add(new PenghuniPanel(), "penghuni");
+    contentPanel.add(new PembayaranPanel(), "pembayaran");
 
     return contentPanel;
     }

@@ -4,57 +4,55 @@ import com.kost.dao.PembayaranDAO;
 import com.kost.model.Pembayaran;
 
 import java.time.LocalDate;
+import java.time.format.TextStyle;
 import java.util.List;
+import java.util.Locale;
 
 public class PembayaranController {
 
     private PembayaranDAO pembayaranDAO = new PembayaranDAO();
 
-    // Ambil semua pembayaran
     public List<Pembayaran> getAllPembayaran() {
         return pembayaranDAO.getAllPembayaran();
     }
 
-    // Ambil pembayaran berdasarkan penghuni
-    public List<Pembayaran> getPembayaranByPenghuni(int penghuniId) {
-        return pembayaranDAO.getPembayaranByPenghuni(penghuniId);
+    public List<Pembayaran> getPembayaranByPenghuni(int idPenghuni) {
+        return pembayaranDAO.getPembayaranByPenghuni(idPenghuni);
     }
 
-    // Buat tagihan baru untuk bulan ini
-    public boolean buatTagihan(int penghuniId, double jumlahBayar) {
-        // Bulan bayar = tanggal 1 bulan ini
-        LocalDate bulanIni = LocalDate.now().withDayOfMonth(1);
+    // Buat tagihan baru. Jatuh tempo = tanggal_masuk_penghuni di bulan ini.
+    public boolean buatTagihan(int idPenghuni, LocalDate tanggalJatuhTempo) {
+        String namaBulan = tanggalJatuhTempo.getMonth()
+                .getDisplayName(TextStyle.FULL, new Locale("id", "ID"))
+                + " " + tanggalJatuhTempo.getYear();
 
         Pembayaran p = new Pembayaran();
-        p.setPenghuniId(penghuniId);
-        p.setBulanBayar(bulanIni);
-        p.setJumlahBayar(jumlahBayar);
-        p.setStatus("MENUNGGAK"); // default belum bayar
-        p.setTanggalBayar(null);
+        p.setIdPenghuni(idPenghuni);
+        p.setBulanTagihan(namaBulan);
+        p.setTanggalJatuhTempo(tanggalJatuhTempo);
+        p.setStatusPembayaran("BELUM BAYAR");
 
-        return pembayaranDAO.tambahPembayaran(p);
+        return pembayaranDAO.tambahTagihan(p);
     }
 
-    // Tandai pembayaran sebagai LUNAS
-    public boolean bayarTagihan(int pembayaranId) {
-        return pembayaranDAO.bayar(pembayaranId);
+    public boolean bayarTagihan(int idPembayaran) {
+        return pembayaranDAO.bayar(idPembayaran);
     }
 
-    // Cek status tagihan — LUNAS atau MENUNGGAK dengan masa tenggang 7 hari
-    public String cekStatusTagihan(Pembayaran pembayaran) {
-        if (pembayaran.getStatus().equals("LUNAS")) {
+    // Hitung status real-time berdasarkan masa tenggang 7 hari
+    public String cekStatusTagihan(Pembayaran p) {
+        if (p.getStatusPembayaran().equals("LUNAS")) {
             return "LUNAS";
         }
 
-        // Jatuh tempo = tanggal 1 bulan berikutnya
-        LocalDate jatuhTempo = pembayaran.getBulanBayar().plusMonths(1);
-        LocalDate batasTenggang = jatuhTempo.plusDays(7);
+        LocalDate batasTenggang = p.getTanggalJatuhTempo().plusDays(7);
 
         if (LocalDate.now().isAfter(batasTenggang)) {
             return "MENUNGGAK";
+        } else if (LocalDate.now().isBefore(p.getTanggalJatuhTempo())) {
+            return "BELUM JATUH TEMPO";
         } else {
-            // Masih dalam masa tenggang
-            return "MENUNGGAK (Masa Tenggang hingga " + batasTenggang + ")";
+            return "MASA TENGGANG (s.d. " + batasTenggang + ")";
         }
     }
 }

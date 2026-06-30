@@ -70,12 +70,9 @@ public class KamarPanel extends JPanel {
     private JPanel buildTableCard() {
         JPanel card = new JPanel(new BorderLayout());
         card.setBackground(CARD_BG);
-        card.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(226, 232, 240), 1),
-            new EmptyBorder(0, 0, 0, 0)
-        ));
+        card.setBorder(BorderFactory.createLineBorder(new Color(226, 232, 240), 1));
 
-        String[] columns = {"ID", "Nomor Kamar", "Status", "Kapasitas", "Tarif/Bulan"};
+        String[] columns = {"ID", "Nomor Kamar", "Status", "Harga Dasar", "Biaya Tambahan", "Total/Bulan"};
         tableModel = new DefaultTableModel(columns, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -87,26 +84,18 @@ public class KamarPanel extends JPanel {
         table.getTableHeader().setBackground(new Color(248, 250, 252));
         table.getTableHeader().setForeground(new Color(100, 116, 139));
         table.setSelectionBackground(new Color(238, 242, 255));
-        table.setSelectionForeground(new Color(15, 23, 42));
         table.setShowGrid(false);
         table.setIntercellSpacing(new Dimension(0, 0));
 
-        // Warna status
         table.getColumnModel().getColumn(2).setCellRenderer(new DefaultTableCellRenderer() {
             public Component getTableCellRendererComponent(JTable t, Object v,
                     boolean sel, boolean foc, int r, int c) {
                 JLabel lbl = (JLabel) super.getTableCellRendererComponent(t, v, sel, foc, r, c);
                 String status = v.toString();
                 switch (status) {
-                    case "kosong":
-                        lbl.setForeground(SUCCESS);
-                        break;
-                    case "terisi":
-                        lbl.setForeground(DANGER);
-                        break;
-                    case "perbaikan":
-                        lbl.setForeground(WARNING);
-                        break;
+                    case "kosong": lbl.setForeground(SUCCESS); break;
+                    case "terisi": lbl.setForeground(DANGER); break;
+                    case "perbaikan": lbl.setForeground(WARNING); break;
                 }
                 lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
                 lbl.setHorizontalAlignment(SwingConstants.CENTER);
@@ -114,7 +103,6 @@ public class KamarPanel extends JPanel {
             }
         });
 
-        // Sembunyikan kolom ID
         table.getColumnModel().getColumn(0).setMinWidth(0);
         table.getColumnModel().getColumn(0).setMaxWidth(0);
 
@@ -122,7 +110,6 @@ public class KamarPanel extends JPanel {
         scroll.setBorder(BorderFactory.createEmptyBorder());
         card.add(scroll, BorderLayout.CENTER);
 
-        // Tombol aksi bawah
         JPanel actionBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 12));
         actionBar.setBackground(new Color(248, 250, 252));
         actionBar.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(226, 232, 240)));
@@ -143,40 +130,30 @@ public class KamarPanel extends JPanel {
         return card;
     }
 
-    private JButton buildActionButton(String text, Color color) {
-        JButton btn = new JButton(text);
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        btn.setForeground(color);
-        btn.setBackground(Color.WHITE);
-        btn.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(color, 1),
-            new EmptyBorder(6, 16, 6, 16)
-        ));
-        btn.setFocusPainted(false);
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        return btn;
-    }
-
     private void loadData() {
         tableModel.setRowCount(0);
         List<Kamar> list = controller.getAllKamar();
         for (Kamar k : list) {
             tableModel.addRow(new Object[]{
-                k.getId(),
+                k.getIdKamar(),
                 k.getNomorKamar(),
-                k.getStatus(),
-                k.getKapasitas() + " orang",
-                "Rp " + String.format("%,.0f", k.getTarif())
+                k.getStatusKamar(),
+                "Rp " + String.format("%,d", k.getHarga()),
+                "Rp " + String.format("%,d", k.getBiayaTambahan()),
+                "Rp " + String.format("%,d", k.getTotalTarif())
             });
         }
     }
 
     private void showTambahDialog() {
         JTextField tfNomor = new JTextField();
-        JComboBox<Integer> cbKapasitas = new JComboBox<>(new Integer[]{1, 2});
+        JTextField tfHarga = new JTextField("1700000");
+        JTextField tfBiayaTambahan = new JTextField("0");
 
-        JPanel form = buildForm(new String[]{"Nomor Kamar:", "Kapasitas:"},
-                new JComponent[]{tfNomor, cbKapasitas});
+        JPanel form = buildForm(
+            new String[]{"Nomor Kamar:", "Harga Dasar (Rp):", "Biaya Tambahan (Rp):"},
+            new JComponent[]{tfNomor, tfHarga, tfBiayaTambahan}
+        );
 
         int result = JOptionPane.showConfirmDialog(this, form,
                 "Tambah Kamar Baru", JOptionPane.OK_CANCEL_OPTION,
@@ -186,14 +163,13 @@ public class KamarPanel extends JPanel {
             try {
                 boolean ok = controller.tambahKamar(
                     tfNomor.getText(),
-                    (Integer) cbKapasitas.getSelectedItem()
+                    Integer.parseInt(tfHarga.getText().trim()),
+                    Integer.parseInt(tfBiayaTambahan.getText().trim())
                 );
-                if (ok) {
-                    showSuccess("Kamar berhasil ditambahkan!");
-                    loadData();
-                } else {
-                    showError("Gagal menambahkan kamar.");
-                }
+                if (ok) { showSuccess("Kamar berhasil ditambahkan!"); loadData(); }
+                else showError("Gagal menambahkan kamar.");
+            } catch (NumberFormatException ex) {
+                showError("Harga dan biaya tambahan harus berupa angka!");
             } catch (IllegalArgumentException ex) {
                 showError(ex.getMessage());
             }
@@ -211,11 +187,12 @@ public class KamarPanel extends JPanel {
         JTextField tfNomor = new JTextField(nomorLama);
         JComboBox<String> cbStatus = new JComboBox<>(new String[]{"kosong", "terisi", "perbaikan"});
         cbStatus.setSelectedItem(statusLama);
-        JComboBox<Integer> cbKapasitas = new JComboBox<>(new Integer[]{1, 2});
+        JTextField tfHarga = new JTextField("1700000");
+        JTextField tfBiayaTambahan = new JTextField("0");
 
         JPanel form = buildForm(
-            new String[]{"Nomor Kamar:", "Status:", "Kapasitas:"},
-            new JComponent[]{tfNomor, cbStatus, cbKapasitas}
+            new String[]{"Nomor Kamar:", "Status:", "Harga Dasar (Rp):", "Biaya Tambahan (Rp):"},
+            new JComponent[]{tfNomor, cbStatus, tfHarga, tfBiayaTambahan}
         );
 
         int result = JOptionPane.showConfirmDialog(this, form,
@@ -224,10 +201,13 @@ public class KamarPanel extends JPanel {
         if (result == JOptionPane.OK_OPTION) {
             try {
                 boolean ok = controller.updateKamar(id, tfNomor.getText(),
-                    (Integer) cbKapasitas.getSelectedItem(),
-                    (String) cbStatus.getSelectedItem());
+                    (String) cbStatus.getSelectedItem(),
+                    Integer.parseInt(tfHarga.getText().trim()),
+                    Integer.parseInt(tfBiayaTambahan.getText().trim()));
                 if (ok) { showSuccess("Kamar berhasil diupdate!"); loadData(); }
                 else showError("Gagal mengupdate kamar.");
+            } catch (NumberFormatException ex) {
+                showError("Harga dan biaya tambahan harus berupa angka!");
             } catch (IllegalArgumentException ex) {
                 showError(ex.getMessage());
             }
@@ -261,6 +241,20 @@ public class KamarPanel extends JPanel {
             panel.add(fields[i]);
         }
         return panel;
+    }
+
+    private JButton buildActionButton(String text, Color color) {
+        JButton btn = new JButton(text);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btn.setForeground(color);
+        btn.setBackground(Color.WHITE);
+        btn.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(color, 1),
+            new EmptyBorder(6, 16, 6, 16)
+        ));
+        btn.setFocusPainted(false);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        return btn;
     }
 
     private void showSuccess(String msg) {

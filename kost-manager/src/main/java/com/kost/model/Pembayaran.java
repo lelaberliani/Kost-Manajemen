@@ -3,51 +3,30 @@ package com.kost.model;
 import java.time.LocalDate;
 
 public class Pembayaran {
-    private int id;
-    private int penghuniId;
-    private LocalDate bulanBayar;
+    private int idPembayaran;
+    private int idPenghuni;
+    private String bulanTagihan;
+    private LocalDate tanggalJatuhTempo;
     private LocalDate tanggalBayar;
-    private double jumlahBayar;
-    private String status; // "LUNAS" atau "MENUNGGAK"
+    private String statusPembayaran; // "BELUM JATUH TEMPO", "BELUM BAYAR", "LUNAS", "MENUNGGAK" dll
 
     public Pembayaran() {}
 
-    public Pembayaran(int id, int penghuniId, LocalDate bulanBayar,
-                      LocalDate tanggalBayar, double jumlahBayar, String status) {
-        this.id = id;
-        this.penghuniId = penghuniId;
-        this.bulanBayar = bulanBayar;
-        this.tanggalBayar = tanggalBayar;
-        this.jumlahBayar = jumlahBayar;
-        this.status = status;
-    }
+    public int getIdPembayaran() { return idPembayaran; }
+    public void setIdPembayaran(int id) { this.idPembayaran = id; }
 
-    // Getters & Setters
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public int getIdPenghuni() { return idPenghuni; }
+    public void setIdPenghuni(int id) { this.idPenghuni = id; }
 
-    public int getPenghuniId() { return penghuniId; }
-    public void setPenghuniId(int penghuniId) { this.penghuniId = penghuniId; }
+    public String getBulanTagihan() { return bulanTagihan; }
+    public void setBulanTagihan(String bulanTagihan) { this.bulanTagihan = bulanTagihan; }
 
-    public LocalDate getBulanBayar() { return bulanBayar; }
-    public void setBulanBayar(LocalDate bulanBayar) { this.bulanBayar = bulanBayar; }
+    public LocalDate getTanggalJatuhTempo() { return tanggalJatuhTempo; }
+    public void setTanggalJatuhTempo(LocalDate t) { this.tanggalJatuhTempo = t; }
 
     public LocalDate getTanggalBayar() { return tanggalBayar; }
-    public void setTanggalBayar(LocalDate tanggalBayar) { this.tanggalBayar = tanggalBayar; }
+    public void setTanggalBayar(LocalDate t) { this.tanggalBayar = t; }
 
-    public double getJumlahBayar() { return jumlahBayar; }
-    public void setJumlahBayar(double jumlahBayar) { this.jumlahBayar = jumlahBayar; }
-
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-
-    // Cek apakah masih dalam masa tenggang 7 hari
-    public boolean isMasaTenggang(LocalDate jatuhTempo) {
-        return LocalDate.now().isBefore(jatuhTempo.plusDays(7));
-    }
-
-    @Override
-    public String toString() {
-        return "Pembayaran [" + bulanBayar + "] - " + status;
-    }
+    public String getStatusPembayaran() { return statusPembayaran; }
+    public void setStatusPembayaran(String s) { this.statusPembayaran = s; }
 }

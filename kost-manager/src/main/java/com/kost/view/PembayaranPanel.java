@@ -10,6 +10,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.time.LocalDate;
 import java.util.List;
 
 public class PembayaranPanel extends JPanel {
@@ -24,6 +25,7 @@ public class PembayaranPanel extends JPanel {
     private static final Color ACCENT = new Color(99, 102, 241);
     private static final Color DANGER = new Color(239, 68, 68);
     private static final Color SUCCESS = new Color(34, 197, 94);
+    private static final Color WARNING = new Color(234, 179, 8);
 
     public PembayaranPanel() {
         setLayout(new BorderLayout());
@@ -74,7 +76,7 @@ public class PembayaranPanel extends JPanel {
         card.setBackground(CARD_BG);
         card.setBorder(BorderFactory.createLineBorder(new Color(226, 232, 240), 1));
 
-        String[] columns = {"ID", "ID Penghuni", "Bulan", "Tgl Bayar", "Jumlah", "Status"};
+        String[] columns = {"ID", "ID Penghuni", "Bulan Tagihan", "Jatuh Tempo", "Tgl Bayar", "Status"};
         tableModel = new DefaultTableModel(columns, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -89,24 +91,20 @@ public class PembayaranPanel extends JPanel {
         table.setShowGrid(false);
         table.setIntercellSpacing(new Dimension(0, 0));
 
-        // Warna status LUNAS / MENUNGGAK
         table.getColumnModel().getColumn(5).setCellRenderer(new DefaultTableCellRenderer() {
             public Component getTableCellRendererComponent(JTable t, Object v,
                     boolean sel, boolean foc, int r, int c) {
                 JLabel lbl = (JLabel) super.getTableCellRendererComponent(t, v, sel, foc, r, c);
                 String status = v.toString();
-                if (status.equals("LUNAS")) {
-                    lbl.setForeground(SUCCESS);
-                } else {
-                    lbl.setForeground(DANGER);
-                }
+                if (status.equals("LUNAS")) lbl.setForeground(SUCCESS);
+                else if (status.startsWith("MASA TENGGANG")) lbl.setForeground(WARNING);
+                else lbl.setForeground(DANGER);
                 lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
                 lbl.setHorizontalAlignment(SwingConstants.CENTER);
                 return lbl;
             }
         });
 
-        // Sembunyikan kolom ID
         table.getColumnModel().getColumn(0).setMinWidth(0);
         table.getColumnModel().getColumn(0).setMaxWidth(0);
 
@@ -114,7 +112,6 @@ public class PembayaranPanel extends JPanel {
         scroll.setBorder(BorderFactory.createEmptyBorder());
         card.add(scroll, BorderLayout.CENTER);
 
-        // Action bar
         JPanel actionBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 12));
         actionBar.setBackground(new Color(248, 250, 252));
         actionBar.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(226, 232, 240)));
@@ -137,11 +134,11 @@ public class PembayaranPanel extends JPanel {
         List<Pembayaran> list = controller.getAllPembayaran();
         for (Pembayaran p : list) {
             tableModel.addRow(new Object[]{
-                p.getId(),
-                p.getPenghuniId(),
-                p.getBulanBayar().toString(),
+                p.getIdPembayaran(),
+                p.getIdPenghuni(),
+                p.getBulanTagihan(),
+                p.getTanggalJatuhTempo().toString(),
                 p.getTanggalBayar() != null ? p.getTanggalBayar().toString() : "-",
-                "Rp " + String.format("%,.0f", p.getJumlahBayar()),
                 controller.cekStatusTagihan(p)
             });
         }
@@ -159,21 +156,21 @@ public class PembayaranPanel extends JPanel {
         for (Penghuni p : list) {
             cbPenghuni.addItem(p.getNama() + " (ID: " + p.getId() + ")");
         }
-        JTextField tfJumlah = new JTextField("1700000");
+        JTextField tfJatuhTempo = new JTextField(LocalDate.now().toString());
 
         JPanel form = new JPanel(new GridLayout(2, 2, 10, 10));
         form.setBorder(new EmptyBorder(10, 10, 10, 10));
         form.add(new JLabel("Penghuni:")); form.add(cbPenghuni);
-        form.add(new JLabel("Jumlah Tagihan (Rp):")); form.add(tfJumlah);
+        form.add(new JLabel("Tanggal Jatuh Tempo (YYYY-MM-DD):")); form.add(tfJatuhTempo);
 
         int result = JOptionPane.showConfirmDialog(this, form,
-            "Buat Tagihan Bulan Ini", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            "Buat Tagihan Baru", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
         if (result == JOptionPane.OK_OPTION) {
             try {
-                int penghuniId = list.get(cbPenghuni.getSelectedIndex()).getId();
-                double jumlah = Double.parseDouble(tfJumlah.getText().trim());
-                boolean ok = controller.buatTagihan(penghuniId, jumlah);
+                int idPenghuni = list.get(cbPenghuni.getSelectedIndex()).getId();
+                LocalDate jatuhTempo = LocalDate.parse(tfJatuhTempo.getText().trim());
+                boolean ok = controller.buatTagihan(idPenghuni, jatuhTempo);
                 if (ok) { showSuccess("Tagihan berhasil dibuat!"); loadData(); }
                 else showError("Gagal membuat tagihan.");
             } catch (Exception ex) {
@@ -187,10 +184,7 @@ public class PembayaranPanel extends JPanel {
         if (row < 0) { showError("Pilih tagihan yang ingin ditandai LUNAS!"); return; }
 
         String status = tableModel.getValueAt(row, 5).toString();
-        if (status.equals("LUNAS")) {
-            showError("Tagihan ini sudah LUNAS!");
-            return;
-        }
+        if (status.equals("LUNAS")) { showError("Tagihan ini sudah LUNAS!"); return; }
 
         int id = (int) tableModel.getValueAt(row, 0);
         int confirm = JOptionPane.showConfirmDialog(this,

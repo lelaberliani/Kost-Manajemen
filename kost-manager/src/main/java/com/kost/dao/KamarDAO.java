@@ -9,7 +9,6 @@ import java.util.List;
 
 public class KamarDAO {
 
-    // Ambil semua kamar
     public List<Kamar> getAllKamar() {
         List<Kamar> list = new ArrayList<>();
         String sql = "SELECT * FROM kamar";
@@ -17,14 +16,7 @@ public class KamarDAO {
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
-                Kamar k = new Kamar(
-                    rs.getInt("id"),
-                    rs.getString("nomor_kamar"),
-                    rs.getString("status"),
-                    rs.getInt("kapasitas"),
-                    rs.getDouble("tarif")
-                );
-                list.add(k);
+                list.add(mapRow(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -32,15 +24,14 @@ public class KamarDAO {
         return list;
     }
 
-    // Tambah kamar baru
     public boolean tambahKamar(Kamar kamar) {
-        String sql = "INSERT INTO kamar (nomor_kamar, status, kapasitas, tarif) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO kamar (nomor_kamar, status_kamar, harga, biaya_tambahan) VALUES (?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, kamar.getNomorKamar());
-            ps.setString(2, kamar.getStatus());
-            ps.setInt(3, kamar.getKapasitas());
-            ps.setDouble(4, kamar.getTarif());
+            ps.setString(2, kamar.getStatusKamar());
+            ps.setInt(3, kamar.getHarga());
+            ps.setInt(4, kamar.getBiayaTambahan());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -48,16 +39,15 @@ public class KamarDAO {
         }
     }
 
-    // Update kamar
     public boolean updateKamar(Kamar kamar) {
-        String sql = "UPDATE kamar SET nomor_kamar=?, status=?, kapasitas=?, tarif=? WHERE id=?";
+        String sql = "UPDATE kamar SET nomor_kamar=?, status_kamar=?, harga=?, biaya_tambahan=? WHERE id_kamar=?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, kamar.getNomorKamar());
-            ps.setString(2, kamar.getStatus());
-            ps.setInt(3, kamar.getKapasitas());
-            ps.setDouble(4, kamar.getTarif());
-            ps.setInt(5, kamar.getId());
+            ps.setString(2, kamar.getStatusKamar());
+            ps.setInt(3, kamar.getHarga());
+            ps.setInt(4, kamar.getBiayaTambahan());
+            ps.setInt(5, kamar.getIdKamar());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -65,12 +55,11 @@ public class KamarDAO {
         }
     }
 
-    // Hapus kamar
-    public boolean hapusKamar(int id) {
-        String sql = "DELETE FROM kamar WHERE id=?";
+    public boolean hapusKamar(int idKamar) {
+        String sql = "DELETE FROM kamar WHERE id_kamar=?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
+            ps.setInt(1, idKamar);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -78,17 +67,26 @@ public class KamarDAO {
         }
     }
 
-    // Update status kamar saja (kosong/terisi/perbaikan)
-    public boolean updateStatusKamar(int id, String status) {
-        String sql = "UPDATE kamar SET status=? WHERE id=?";
+    public boolean updateStatusKamar(int idKamar, String status) {
+        String sql = "UPDATE kamar SET status_kamar=? WHERE id_kamar=?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
-            ps.setInt(2, id);
+            ps.setInt(2, idKamar);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
+    }
+
+    private Kamar mapRow(ResultSet rs) throws SQLException {
+        Kamar k = new Kamar();
+        k.setIdKamar(rs.getInt("id_kamar"));
+        k.setNomorKamar(rs.getString("nomor_kamar"));
+        k.setStatusKamar(rs.getString("status_kamar"));
+        k.setHarga(rs.getInt("harga"));
+        k.setBiayaTambahan(rs.getInt("biaya_tambahan"));
+        return k;
     }
 }

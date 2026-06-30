@@ -9,60 +9,44 @@ public class KamarController {
 
     private KamarDAO kamarDAO = new KamarDAO();
 
-    // Ambil semua kamar
     public List<Kamar> getAllKamar() {
         return kamarDAO.getAllKamar();
     }
 
-    // Tambah kamar baru
-    public boolean tambahKamar(String nomorKamar, int kapasitas) {
-        // Validasi nomor kamar tidak boleh kosong
+    public boolean tambahKamar(String nomorKamar, int hargaDasar, int biayaTambahan) {
         if (nomorKamar == null || nomorKamar.trim().isEmpty()) {
             throw new IllegalArgumentException("Nomor kamar tidak boleh kosong!");
         }
 
-        // Kapasitas hanya boleh 1 atau 2
-        if (kapasitas < 1 || kapasitas > 2) {
-            throw new IllegalArgumentException("Kapasitas kamar hanya boleh 1 atau 2!");
-        }
-
-        // Tarif otomatis berdasarkan kapasitas
-        double tarif = kapasitas == 2 ? 2000000 : 1700000;
-
         Kamar kamar = new Kamar();
         kamar.setNomorKamar(nomorKamar.trim());
-        kamar.setStatus("kosong");
-        kamar.setKapasitas(kapasitas);
-        kamar.setTarif(tarif);
+        kamar.setStatusKamar("kosong");
+        kamar.setHarga(hargaDasar);
+        kamar.setBiayaTambahan(biayaTambahan);
 
         return kamarDAO.tambahKamar(kamar);
     }
 
-    // Update kamar
-    public boolean updateKamar(int id, String nomorKamar, int kapasitas, String status) {
+    public boolean updateKamar(int idKamar, String nomorKamar, String statusKamar, int harga, int biayaTambahan) {
         if (nomorKamar == null || nomorKamar.trim().isEmpty()) {
             throw new IllegalArgumentException("Nomor kamar tidak boleh kosong!");
         }
 
-        double tarif = kapasitas == 2 ? 2000000 : 1700000;
-
         Kamar kamar = new Kamar();
-        kamar.setId(id);
+        kamar.setIdKamar(idKamar);
         kamar.setNomorKamar(nomorKamar.trim());
-        kamar.setStatus(status);
-        kamar.setKapasitas(kapasitas);
-        kamar.setTarif(tarif);
+        kamar.setStatusKamar(statusKamar);
+        kamar.setHarga(harga);
+        kamar.setBiayaTambahan(biayaTambahan);
 
         return kamarDAO.updateKamar(kamar);
     }
 
-    // Hapus kamar
-    public boolean hapusKamar(int id) {
-        return kamarDAO.hapusKamar(id);
+    public boolean hapusKamar(int idKamar) {
+        return kamarDAO.hapusKamar(idKamar);
     }
 
-    // Update status kamar saja
-    public boolean updateStatusKamar(int id, String status) {
-        return kamarDAO.updateStatusKamar(id, status);
+    public boolean updateStatusKamar(int idKamar, String status) {
+        return kamarDAO.updateStatusKamar(idKamar, status);
     }
 }

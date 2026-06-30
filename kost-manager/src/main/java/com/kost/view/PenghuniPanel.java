@@ -137,8 +137,8 @@ public class PenghuniPanel extends JPanel {
         // Ambil daftar kamar kosong
         List<Kamar> kamarList = kamarController.getAllKamar();
         List<Kamar> kamarKosong = kamarList.stream()
-            .filter(k -> k.getStatus().equals("kosong"))
-            .collect(java.util.stream.Collectors.toList());
+        .filter(k -> k.getStatusKamar().equals("kosong"))
+        .collect(java.util.stream.Collectors.toList());
 
         if (kamarKosong.isEmpty()) {
             JOptionPane.showMessageDialog(this,
@@ -154,7 +154,7 @@ public class PenghuniPanel extends JPanel {
         JComboBox<Integer> cbJumlah = new JComboBox<>(new Integer[]{1, 2});
 
         for (Kamar k : kamarKosong) {
-            cbKamar.addItem("Kamar " + k.getNomorKamar() + " (ID: " + k.getId() + ")");
+        cbKamar.addItem("Kamar " + k.getNomorKamar() + " (ID: " + k.getIdKamar() + ")");
         }
 
         JPanel form = new JPanel(new GridLayout(6, 2, 10, 10));
@@ -172,7 +172,7 @@ public class PenghuniPanel extends JPanel {
         if (result == JOptionPane.OK_OPTION) {
             try {
                 int selectedIndex = cbKamar.getSelectedIndex();
-                int kamarId = kamarKosong.get(selectedIndex).getId();
+                int kamarId = kamarKosong.get(selectedIndex).getIdKamar();
                 LocalDate tanggalMasuk = LocalDate.parse(tfTanggal.getText().trim());
 
                 boolean ok = controller.tambahPenghuni(
